@@ -1,0 +1,40 @@
+function ssa_example()
+% Simulate a two-state model of gene expression
+import Gillespie.*
+n=1000;
+p.kR = 0.1;%0.01;      
+p.kP = p.kR/n;
+
+%% Initial state
+tspan = [0, 100]; %seconds
+x0    = n;     %mRNA, protein
+
+%% Specify reaction network
+pfun = @propensities_2state;
+stoich_matrix = [ 1  
+                 -1  ]; %protein decay
+
+%% Run simulation
+[t,x] = directMethod(stoich_matrix, pfun, tspan, x0, p);
+%[t,x] = firstReactionMethod(stoich_matrix, pfun, tspan, x0, p);
+
+%% Plot time course
+figure();
+stairs(t,x); set(gca,'XLim',tspan);
+xlabel('time (s)');
+ylabel('molecules');
+legend({'mRNA','protein'});
+
+end
+
+
+function a = propensities_2state(x, p)
+% Return reaction propensities given current state x
+mRNA    = x(1);
+protein = x(2);
+
+a = [p.kR;            %transcription
+     p.kP*mRNA;       %translation
+     p.gR*mRNA;       %mRNA decay
+     p.gP*protein];   %protein decay
+end
